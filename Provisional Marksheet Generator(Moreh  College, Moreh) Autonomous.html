@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mark Sheet Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            min-width: 250px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 4px solid #3498db;
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .results-container {
+            padding: 30px;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .results-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .results-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-weight: bold;
+        }
+
+        .marksheet {
+            background: white;
+            padding: 40px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 2px solid #3498db;
+        }
+
+        .marksheet-header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 20px;
+        }
+
+        .marksheet-title {
+            font-size: 2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .marksheet-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .controls, .search-box, .btn {
+                display: none;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+
+        .download-section {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 MOREH COLLEGE, MOREH (AUTONOMOUS)</h1>
+            <p>Academic Results Portal | Session 2024-25</p>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by name or roll number...">
+                <button onclick="searchStudent()" class="btn btn-primary">🔍 Search</button>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">91</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">83</div>
+                    <div class="stat-label">Passed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">91.2%</div>
+                    <div class="stat-label">Pass Rate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="results-container">
+            <div id="searchResults" class="hidden">
+                <h2>Search Results</h2>
+                <div id="individualMarksheet"></div>
+                <div class="download-section">
+                    <button onclick="downloadIndividualMarksheet()" class="btn btn-success">📥 Download Mark Sheet</button>
+                </div>
+            </div>
+
+            <div id="allResults" class="hidden">
+                <h2>All Results</h2>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>S.No.</th>
+                            <th>Name</th>
+                            <th>Roll No.</th>
+                            <th>Result</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsTableBody">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const studentsData = [
+            { name: "MERCY NENGNUNPAH MATE", rollNo: "241002", result: "PASS" },
+            { name: "VAKLEMHOI VAIPHEI", rollNo: "241003", result: "PASS" },
+            { name: "LHINGNEIKIM HAOKIP", rollNo: "241004", result: "PASS" },
+            { name: "DEBORAH NEITHIANKIM BAITE", rollNo: "241005", result: "PASS" },
+            { name: "THANGLENMANG BAITE", rollNo: "241006", result: "PASS" },
+            { name: "PAOLENLAL DIMNGEL", rollNo: "241009", result: "PASS" },
+            { name: "THANGKHANLEN HANGSHING", rollNo: "241011", result: "PASS" },
+            { name: "A SWATHI", rollNo: "241012", result: "PASS" },
+            { name: "M JESSICA VAHJANENG HAOKIP", rollNo: "241013", result: "PASS" },
+            { name: "LUNSANGKIM", rollNo: "241014", result: "PASS" },
+            { name: "PHALNEITHEM TOUTHANG", rollNo: "241015", result: "PASS" },
+            { name: "LALNGAIHKIMI", rollNo: "241016", result: "PASS" },
+            { name: "NENGNEILHING TOUTHANG", rollNo: "241017", result: "PASS" },
+            { name: "NENGNEITHEM HAOKIP", rollNo: "241018", result: "PASS" },
+            { name: "CHONGNEIKIM KILONG", rollNo: "241019", result: "PASS" },
+            { name: "NENGNEITHEM MATE", rollNo: "241020", result: "PASS" },
+            { name: "TINNUNMOI KILONG", rollNo: "241021", result: "PASS" },
+            { name: "VAHCHOIHOI MATE", rollNo: "241022", result: "PASS" },
+            { name: "MANTUANG JANGKHANKAI ZOU", rollNo: "241023", result: "PASS" },
+            { name: "LUNKHOHOU GUITE", rollNo: "241026", result: "PASS" },
+            { name: "KENMINTHANG MISAO", rollNo: "241027", result: "PASS" },
+            { name: "PAOSEI MATE", rollNo: "241028", result: "PASS" },
+            { name: "RANY VEINEICHONG", rollNo: "241030", result: "PASS" },
+            { name: "LHINGNEICHONG HAOKIP", rollNo: "241031", result: "PASS" },
+            { name: "PHANGAIKIM HAOKIP", rollNo: "241032", result: "PASS" },
+            { name: "CINDY NUAMNUNKIM BAITE", rollNo: "241033", result: "PASS" },
+            { name: "SINGNGUL CECELIA TINNEIVAH BAITE", rollNo: "241034", result: "PASS" },
+            { name: "CHONGNEIMOI HAOKIP", rollNo: "241035", result: "PASS" },
+            { name: "CLARE CHINHOINENG KHONGSAI", rollNo: "241036", result: "PASS" },
+            { name: "TH. LHINGNEICHOI HAOKIP", rollNo: "241037", result: "PASS" },
+            { name: "PC LALRAMHLUNA", rollNo: "241038", result: "PASS" },
+            { name: "DOULUNMANG TOUTHANG", rollNo: "241039", result: "PASS" },
+            { name: "KHAIJALENG KIPGEN", rollNo: "241040", result: "PASS" },
+            { name: "JAMMINLEN HAOKIP", rollNo: "241041", result: "PASS" },
+            { name: "TINJANENG MATE", rollNo: "241042", result: "PASS" },
+            { name: "HATNEICHING SAMTE", rollNo: "241043", result: "PASS" },
+            { name: "LHINGNEITHEM HAOKIP", rollNo: "241044", result: "PASS" },
+            { name: "LHINGNEILAM HAOKIP", rollNo: "241045", result: "PASS" },
+            { name: "NENGGUNCHU TOUTHANG", rollNo: "241046", result: "PASS" },
+            { name: "Y. NGANNEIHRING KOIRENG", rollNo: "241047", result: "PASS" },
+            { name: "MD SAHID ALI", rollNo: "241048", result: "PASS" },
+            { name: "MD NOOR SAFI", rollNo: "241049", result: "PASS" },
+            { name: "LUNGOULAL HAOKIP", rollNo: "241050", result: "PASS" },
+            { name: "SAMSON KHAIGOU HAOKIP", rollNo: "241051", result: "PASS" },
+            { name: "LUNGOULEN MATE", rollNo: "241052", result: "FAIL" },
+            { name: "LIANTINMANG VAIPHEI", rollNo: "241053", result: "PASS" },
+            { name: "LETMINLEN BAITE", rollNo: "241054", result: "PASS" },
+            { name: "S. LETKHOGIN BAITE", rollNo: "241055", result: "PASS" },
+            { name: "DAVIDTHANG HAOKIP", rollNo: "241056", result: "PASS" },
+            { name: "SARAH CATHERINE", rollNo: "241057", result: "FAIL" },
+            { name: "LAMNEIMOI TOUTHANG", rollNo: "241058", result: "FAIL" },
+            { name: "LAMNEIHOI TOUTHANG", rollNo: "241059", result: "FAIL" },
+            { name: "GINLALDIK GANGTE", rollNo: "241060", result: "FAIL" },
+            { name: "LUNJAHAO HAOKIP", rollNo: "241062", result: "PASS" },
+            { name: "H. KHAIMINGOU KHONGSAI", rollNo: "241063", result: "FAIL" },
+            { name: "LETGOUGIN BAITE", rollNo: "241064", result: "PASS" },
+            { name: "HAOMINLEN KIPGEN", rollNo: "241065", result: "PASS" },
+            { name: "THANGTINMANG HAOKIP", rollNo: "241066", result: "PASS" },
+            { name: "PH. HEMGOUGIN MATE", rollNo: "241067", result: "PASS" },
+            { name: "DOUMINLEN BAITE", rollNo: "241068", result: "FAIL" },
+            { name: "ROSHNI SAHANI", rollNo: "241069", result: "PASS" },
+            { name: "NEMJAHAT HAOKIP", rollNo: "241070", result: "PASS" },
+            { name: "CHINNGEINENG HAOKIP", rollNo: "241071", result: "PASS" },
+            { name: "JENNIFER NIANGHOIKIM TEDIM", rollNo: "241072", result: "PASS" },
+            { name: "NEMNEITHEM HAOKIP", rollNo: "241075", result: "PASS" },
+            { name: "NENGNEITHEM MATE", rollNo: "241076", result: "PASS" },
+            { name: "SH JANGMOUNGOU STEPHEN MATE", rollNo: "241077", result: "PASS" },
+            { name: "THANGMINLEN TOUTHANG", rollNo: "241078", result: "PASS" },
+            { name: "M. HEMKHOLEN HAOKIP", rollNo: "241079", result: "PASS" },
+            { name: "THANGJALEN HAOKIP", rollNo: "241080", result: "PASS" },
+            { name: "SEILENLAL", rollNo: "241082", result: "PASS" },
+            { name: "THANGHAOLEN HAOKIP", rollNo: "241084", result: "PASS" },
+            { name: "PAOJAGIN KIPGEN", rollNo: "241085", result: "PASS" },
+            { name: "DOUTHANGLEN TOUTHANG", rollNo: "241087", result: "PASS" },
+            { name: "HAOMINLUN KIPGEN", rollNo: "241088", result: "PASS" },
+            { name: "YAMKHANSANG LHUNGDIM", rollNo: "241089", result: "PASS" },
+            { name: "SABASTIN LENLALMON HAOKIP", rollNo: "241090", result: "PASS" },
+            { name: "TRISTAN WANGSHOL ANAL", rollNo: "241091", result: "PASS" },
+            { name: "JANGKHOGIN HAOKIP", rollNo: "241092", result: "PASS" },
+            { name: "KAMMINTHANG KHONGSAI", rollNo: "241095", result: "PASS" },
+            { name: "LALMINLEN HAOKIP", rollNo: "241096", result: "PASS" },
+            { name: "NIENGZOUMOI GANGTE", rollNo: "241097", result: "PASS" },
+            { name: "LHINGNEINENG VAIPHEI", rollNo: "241098", result: "PASS" },
+            { name: "LHINGTHIENKIM GANGTE", rollNo: "241099", result: "PASS" },
+            { name: "TINGNEIMOI GANGTE", rollNo: "241100", result: "PASS" },
+            { name: "MANGVUNG LUNKHOGIN HAOKIP", rollNo: "241101", result: "PASS" },
+            { name: "KHOULLALTHOM GANGTE", rollNo: "241104", result: "PASS" },
+            { name: "TONGGINMANG HAOKIP", rollNo: "241105", result: "PASS" },
+            { name: "LALMINTHANG KIPGEN", rollNo: "241106", result: "PASS" },
+            { name: "HOLKHONGAM LHUNGDIM", rollNo: "241107", result: "PASS" },
+            { name: "H. THANGSIEMLIEN KHONGSAI", rollNo: "241108", result: "PASS" },
+            { name: "L TONGKHOSAT MATE", rollNo: "241109", result: "PASS" },
+            { name: "T PAOKHANLAL HAOKIP", rollNo: "241110", result: "FAIL" },
+            { name: "SHOKHOLEN TOUTHANG", rollNo: "241111", result: "PASS" },
+            { name: "JANGMINGOU MATE", rollNo: "241112", result: "PASS" },
+            { name: "THANGMINLAL GANGTE", rollNo: "241113", result: "PASS" }
+        ];
+
+        function loadAllResults() {
+            const tableBody = document.getElementById('resultsTableBody');
+            tableBody.innerHTML = '';
+            
+            studentsData.forEach((student, index) => {
+                const row = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${student.name}</td>
+                        <td>${student.rollNo}</td>
+                        <td><span class="status-${student.result.toLowerCase()}">${student.result}</span></td>
+                        <td><button onclick="generateIndividualMarksheet('${student.rollNo}')" class="btn btn-primary">View Mark Sheet</button></td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        function searchStudent() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (!searchTerm) {
+                alert('Please enter a name or roll number to search');
+                return;
+            }
+
+            const student = studentsData.find(s => 
+                s.name.toLowerCase().includes(searchTerm) || 
+                s.rollNo.toLowerCase().includes(searchTerm)
+            );
+
+            if (student) {
+                generateIndividualMarksheet(student.rollNo);
+                document.getElementById('searchResults').classList.remove('hidden');
+                document.getElementById('allResults').classList.add('hidden');
+            } else {
+                alert('Student not found!');
+            }
+        }
+
+        function generateIndividualMarksheet(rollNo) {
+            const student = studentsData.find(s => s.rollNo === rollNo);
+            if (!student) return;
+
+            const marksheetHTML = `
+                <div class="marksheet">
+                    <div class="marksheet-header">
+                        <h2 class="marksheet-title">🎓 MOREH COLLEGE, MOREH (AUTONOMOUS)</h2>
+                        <h3>PROVISIONAL MARK SHEET</h3>
+                        <p><strong>Academic Session 2024-25</strong></p>
+                        <p>Date of Issue: ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    <div class="marksheet-details">
+                        <div class="detail-item">
+                            <span><strong>Student Name:</strong></span>
+                            <span>${student.name}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span><strong>Roll Number:</strong></span>
+                            <span>${student.rollNo}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span><strong>Result Status:</strong></span>
+                            <span class="status-${student.result.toLowerCase()}">${student.result}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span><strong>Date of Examination:</strong></span>
+                            <span>May 2025</span>
+                        </div>
+                        <div class="detail-item">
+                            <span><strong>Institution:</strong></span>
+                            <span>MOREH COLLEGE, MOREH (AUTONOMOUS)</span>
+                        </div>
+                        <div class="detail-item">
+                            <span><strong>Certificate No:</strong></span>
+                            <span>CERT-${student.rollNo}-2025</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 40px; text-align: center; border-top: 2px solid #3498db; padding-top: 20px;">
+                        <p><strong>This is a computer-generated mark sheet and does not require a physical signature.</strong></p>
+                        <p>Generated on: ${new Date().toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('individualMarksheet').innerHTML = marksheetHTML;
+        }
+
+        function showAllResults() {
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('allResults').classList.remove('hidden');
+            document.getElementById('searchInput').value = '';
+        }
+
+        function downloadIndividualMarksheet() {
+            window.print();
+        }
+
+        function downloadAllResults() {
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "S.No,Name,Roll No,Result\n";
+            
+            studentsData.forEach((student, index) => {
+                csvContent += `${index + 1},"${student.name}",${student.rollNo},${student.result}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "examination_results_2024-25.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Initialize the page
+        window.onload = function() {
+            loadAllResults();
+        };
+    </script>
+</body>
+</html>
